@@ -85,6 +85,15 @@ const AdminDashboard = () => {
 
   // NOTE: In a real app we'd redirect if not authorized in a useEffect
   // but for simplicity we render the error state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-deep-bg text-white pt-32 px-6 flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-blue"></div>
+        <p className="mt-4 text-gray-400">Verifying access...</p>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="min-h-screen bg-deep-bg text-white pt-32 px-6 flex flex-col items-center">
