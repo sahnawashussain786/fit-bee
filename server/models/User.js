@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String },
     clerkId: { type: String, unique: true, sparse: true },
+    isAdmin: { type: Boolean, required: true, default: false },
   },
   { timestamps: true }
 );

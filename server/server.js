@@ -5,8 +5,15 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import paymentRoutes from "./routes/payment.js";
 import subscribeRoutes from "./routes/subscribe.js";
+import messageRoutes from "./routes/messages.js";
 
-dotenv.config();
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +32,7 @@ mongoose
 app.use("/api/auth", authRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/subscribe", subscribeRoutes);
+app.use("/api/messages", messageRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running...");

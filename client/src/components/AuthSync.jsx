@@ -20,7 +20,12 @@ const AuthSync = () => {
             }),
           });
 
-          if (!res.ok) {
+          if (res.ok) {
+            const data = await res.json();
+            if (data.token) {
+              localStorage.setItem("token", data.token);
+            }
+          } else {
             console.error("Failed to sync user");
           }
         } catch (error) {

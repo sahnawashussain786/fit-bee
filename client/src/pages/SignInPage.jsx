@@ -55,6 +55,14 @@ const SignInPage = () => {
             }}
             path="/sign-in"
           />
+          <div className="mt-6 text-center">
+            <a
+              href="/admin"
+              className="text-sm text-gray-500 hover:text-white transition-colors"
+            >
+              Admin Login
+            </a>
+          </div>
         </motion.div>
       </div>
     </div>

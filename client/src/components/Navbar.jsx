@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
+import {
+  SignedIn,
+  SignedOut,
+  UserButton,
+  SignOutButton,
+} from "@clerk/clerk-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -163,6 +168,21 @@ const Navbar = () => {
                   </Link>
                 </motion.div>
               ))}
+
+              <SignedIn>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: navLinks.length * 0.1 }}
+                >
+                  <Link
+                    to="/profile"
+                    className="text-3xl font-bold font-heading text-white hover:text-neon-blue transition-colors"
+                  >
+                    Profile
+                  </Link>
+                </motion.div>
+              </SignedIn>
             </div>
 
             <motion.div
@@ -184,10 +204,11 @@ const Navbar = () => {
                 </Link>
               </SignedOut>
               <SignedIn>
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                  <UserButton afterSignOutUrl="/" showName />
-                  <span className="text-gray-400">Manage Account</span>
-                </div>
+                <SignOutButton signOutCallback={() => navigate("/")}>
+                  <button className="w-full py-4 rounded-xl border border-white/10 text-red-400 font-bold text-lg hover:bg-white/5 transition-colors">
+                    Log Out
+                  </button>
+                </SignOutButton>
               </SignedIn>
             </motion.div>
           </motion.div>

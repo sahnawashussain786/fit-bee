@@ -8,12 +8,14 @@ import Services from "./pages/Services";
 import Pricing from "./pages/Pricing";
 import Payment from "./pages/Payment";
 import Contact from "./pages/Contact";
+import AdminDashboard from "./pages/AdminDashboard";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import ClassDetails from "./pages/ClassDetails";
 import ScrollToTop from "./components/ScrollToTop";
 import { SignIn, SignUp, useUser } from "@clerk/clerk-react";
 import AuthSync from "./components/AuthSync";
+import UserProfile from "./pages/UserProfile";
 
 const Layout = () => {
   return (
@@ -38,9 +40,11 @@ const App = () => {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/payment/:plan" element={<Payment />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/sign-in/*" element={<SignInPage />} />
           <Route path="/sign-up/*" element={<SignUpPage />} />
           <Route path="/classes/:id" element={<ClassDetails />} />
+          <Route path="/profile/*" element={<UserProfile />} />
         </Route>
       </Routes>
     </BrowserRouter>

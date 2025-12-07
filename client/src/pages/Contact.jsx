@@ -2,6 +2,58 @@ import React from "react";
 import { motion } from "framer-motion";
 
 const Contact = () => {
+  const [formData, setFormData] = React.useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    message: "",
+  });
+  const [status, setStatus] = React.useState("idle"); // idle, loading, success, error
+  const [errorMessage, setErrorMessage] = React.useState("");
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus("loading");
+    setErrorMessage("");
+
+    try {
+      const response = await fetch("/api/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setStatus("success");
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          message: "",
+        });
+      } else {
+        setStatus("error");
+        setErrorMessage(data.error || "Failed to send message");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setStatus("error");
+      setErrorMessage("Something went wrong. Please try again.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-deep-bg text-white pt-20">
       {/* Hero Section */}
@@ -30,75 +82,109 @@ const Contact = () => {
           <h2 className="text-3xl font-bold mb-8 font-heading">
             Send us a Message
           </h2>
-          <form className="space-y-6">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="relative">
-                <input
-                  type="text"
-                  id="firstName"
-                  className="peer w-full px-4 py-3 rounded-xl bg-deep-bg border border-white/10 text-white focus:outline-none focus:border-neon-blue transition-colors placeholder-transparent"
-                  placeholder="First Name"
-                />
-                <label
-                  htmlFor="firstName"
-                  className="absolute left-4 top-3 text-gray-500 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 peer-focus:-top-2.5 peer-focus:text-neon-blue peer-focus:text-xs peer-focus:bg-card-bg peer-focus:px-1"
-                >
-                  First Name
-                </label>
-              </div>
-              <div className="relative">
-                <input
-                  type="text"
-                  id="lastName"
-                  className="peer w-full px-4 py-3 rounded-xl bg-deep-bg border border-white/10 text-white focus:outline-none focus:border-neon-blue transition-colors placeholder-transparent"
-                  placeholder="Last Name"
-                />
-                <label
-                  htmlFor="lastName"
-                  className="absolute left-4 top-3 text-gray-500 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 peer-focus:-top-2.5 peer-focus:text-neon-blue peer-focus:text-xs peer-focus:bg-card-bg peer-focus:px-1"
-                >
-                  Last Name
-                </label>
-              </div>
-            </div>
-
-            <div className="relative">
-              <input
-                type="email"
-                id="email"
-                className="peer w-full px-4 py-3 rounded-xl bg-deep-bg border border-white/10 text-white focus:outline-none focus:border-neon-blue transition-colors placeholder-transparent"
-                placeholder="Email Address"
-              />
-              <label
-                htmlFor="email"
-                className="absolute left-4 top-3 text-gray-500 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 peer-focus:-top-2.5 peer-focus:text-neon-blue peer-focus:text-xs peer-focus:bg-card-bg peer-focus:px-1"
-              >
-                Email Address
-              </label>
-            </div>
-
-            <div className="relative">
-              <textarea
-                id="message"
-                rows="4"
-                className="peer w-full px-4 py-3 rounded-xl bg-deep-bg border border-white/10 text-white focus:outline-none focus:border-neon-blue transition-colors placeholder-transparent resize-none"
-                placeholder="Message"
-              ></textarea>
-              <label
-                htmlFor="message"
-                className="absolute left-4 top-3 text-gray-500 text-sm transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 peer-focus:-top-2.5 peer-focus:text-neon-blue peer-focus:text-xs peer-focus:bg-card-bg peer-focus:px-1"
-              >
-                Message
-              </label>
-            </div>
-
-            <button
-              type="button"
-              className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors shadow-lg"
+          {status === "success" ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-green-500/10 border border-green-500 text-green-400 p-6 rounded-xl text-center"
             >
-              Send Message
-            </button>
-          </form>
+              <h3 className="text-xl font-bold mb-2">Message Sent!</h3>
+              <p>Thanks for reaching out. We'll get back to you soon.</p>
+              <button
+                onClick={() => setStatus("idle")}
+                className="mt-4 px-6 py-2 bg-green-500 text-black font-bold rounded-lg hover:bg-green-400 transition-colors"
+              >
+                Send Another
+              </button>
+            </motion.div>
+          ) : (
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    required
+                    className="peer w-full px-4 py-3 rounded-xl bg-deep-bg border border-white/10 text-white focus:outline-none focus:border-neon-blue transition-colors placeholder-transparent"
+                    placeholder="First Name"
+                  />
+                  <label
+                    htmlFor="firstName"
+                    className="absolute left-4 -top-2.5 bg-card-bg px-1 text-neon-blue text-xs transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-neon-blue peer-focus:text-xs peer-focus:bg-card-bg peer-focus:px-1"
+                  >
+                    First Name
+                  </label>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    required
+                    className="peer w-full px-4 py-3 rounded-xl bg-deep-bg border border-white/10 text-white focus:outline-none focus:border-neon-blue transition-colors placeholder-transparent"
+                    placeholder="Last Name"
+                  />
+                  <label
+                    htmlFor="lastName"
+                    className="absolute left-4 -top-2.5 bg-card-bg px-1 text-neon-blue text-xs transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-neon-blue peer-focus:text-xs peer-focus:bg-card-bg peer-focus:px-1"
+                  >
+                    Last Name
+                  </label>
+                </div>
+              </div>
+
+              <div className="relative">
+                <input
+                  type="email"
+                  id="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="peer w-full px-4 py-3 rounded-xl bg-deep-bg border border-white/10 text-white focus:outline-none focus:border-neon-blue transition-colors placeholder-transparent"
+                  placeholder="Email Address"
+                />
+                <label
+                  htmlFor="email"
+                  className="absolute left-4 -top-2.5 bg-card-bg px-1 text-neon-blue text-xs transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-neon-blue peer-focus:text-xs peer-focus:bg-card-bg peer-focus:px-1"
+                >
+                  Email Address
+                </label>
+              </div>
+
+              <div className="relative">
+                <textarea
+                  id="message"
+                  rows="4"
+                  value={formData.message}
+                  onChange={handleChange}
+                  required
+                  className="peer w-full px-4 py-3 rounded-xl bg-deep-bg border border-white/10 text-white focus:outline-none focus:border-neon-blue transition-colors placeholder-transparent resize-none"
+                  placeholder="Message"
+                ></textarea>
+                <label
+                  htmlFor="message"
+                  className="absolute left-4 -top-2.5 bg-card-bg px-1 text-neon-blue text-xs transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3.5 peer-placeholder-shown:bg-transparent peer-focus:-top-2.5 peer-focus:text-neon-blue peer-focus:text-xs peer-focus:bg-card-bg peer-focus:px-1"
+                >
+                  Message
+                </label>
+              </div>
+
+              {status === "error" && (
+                <div className="text-red-400 text-sm">{errorMessage}</div>
+              )}
+
+              <button
+                type="submit"
+                disabled={status === "loading"}
+                className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {status === "loading" ? "Sending..." : "Send Message"}
+              </button>
+            </form>
+          )}
         </motion.div>
 
         {/* Info & Map */}
