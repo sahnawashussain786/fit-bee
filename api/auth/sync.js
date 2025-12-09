@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import {
+  connectToDatabase,
+  setCorsHeaders,
+  generateToken,
+  isBootstrapAdmin,
+} from "../utils/authHelper.js";
 
 // User Schema
 const userSchema = new mongoose.Schema(
@@ -9,6 +14,7 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String },
     clerkId: { type: String, unique: true, sparse: true },
+    isAdmin: { type: Boolean, required: true, default: false },
   },
   { timestamps: true }
 );
@@ -27,45 +33,9 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 // Get or create User model
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 
-// MongoDB connection cache
-let cachedDb = null;
-
-async function connectToDatabase() {
-  if (cachedDb && mongoose.connection.readyState === 1) {
-    return cachedDb;
-  }
-
-  if (!process.env.MONGODB_URI) {
-    throw new Error("MONGODB_URI environment variable is not defined");
-  }
-
-  const db = await mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-
-  cachedDb = db;
-  return db;
-}
-
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || "defaultsecret", {
-    expiresIn: "30d",
-  });
-};
-
 export default async function handler(req, res) {
   // Set CORS headers
-  res.setHeader("Access-Control-Allow-Credentials", true);
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET,OPTIONS,PATCH,DELETE,POST,PUT"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
-  );
+  setCorsHeaders(res);
 
   // Handle OPTIONS request
   if (req.method === "OPTIONS") {
@@ -91,18 +61,24 @@ export default async function handler(req, res) {
     // Find user by clerkId or email
     let user = await User.findOne({ $or: [{ clerkId }, { email }] });
 
+    const shouldBeAdmin = isBootstrapAdmin(email);
+
     if (!user) {
       // Create new user
       user = await User.create({
         clerkId,
         name,
         email,
+        isAdmin: shouldBeAdmin,
       });
     } else {
       // Update existing user details to match Clerk
       user.name = name || user.name;
       user.email = email || user.email;
       user.clerkId = clerkId;
+      if (shouldBeAdmin && !user.isAdmin) {
+        user.isAdmin = true;
+      }
       await user.save();
     }
 
@@ -111,6 +87,7 @@ export default async function handler(req, res) {
       name: user.name,
       email: user.email,
       clerkId: user.clerkId,
+      isAdmin: user.isAdmin,
       token: generateToken(user._id),
     });
   } catch (error) {

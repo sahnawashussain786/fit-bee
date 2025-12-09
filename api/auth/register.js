@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import {
+  connectToDatabase,
+  setCorsHeaders,
+  generateToken,
+  isBootstrapAdmin,
+} from "../utils/authHelper.js";
 
 // User Schema
 const userSchema = new mongoose.Schema(
@@ -9,6 +14,7 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String },
     clerkId: { type: String, unique: true, sparse: true },
+    isAdmin: { type: Boolean, required: true, default: false },
   },
   { timestamps: true }
 );
@@ -27,45 +33,9 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 // Get or create User model
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 
-// MongoDB connection cache
-let cachedDb = null;
-
-async function connectToDatabase() {
-  if (cachedDb && mongoose.connection.readyState === 1) {
-    return cachedDb;
-  }
-
-  if (!process.env.MONGODB_URI) {
-    throw new Error("MONGODB_URI environment variable is not defined");
-  }
-
-  const db = await mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-
-  cachedDb = db;
-  return db;
-}
-
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || "defaultsecret", {
-    expiresIn: "30d",
-  });
-};
-
 export default async function handler(req, res) {
   // Set CORS headers
-  res.setHeader("Access-Control-Allow-Credentials", true);
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET,OPTIONS,PATCH,DELETE,POST,PUT"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
-  );
+  setCorsHeaders(res);
 
   // Handle OPTIONS request
   if (req.method === "OPTIONS") {
@@ -95,11 +65,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    const startAsAdmin = isBootstrapAdmin(email);
+
     // Create new user
     const user = await User.create({
       name,
       email,
       password,
+      isAdmin: startAsAdmin,
     });
 
     if (user) {
@@ -107,6 +80,7 @@ export default async function handler(req, res) {
         _id: user._id,
         name: user.name,
         email: user.email,
+        isAdmin: user.isAdmin,
         token: generateToken(user._id),
       });
     } else {

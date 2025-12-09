@@ -3,7 +3,7 @@ import {
   setCorsHeaders,
   checkAdmin,
 } from "../utils/authHelper.js";
-import User from "../../server/models/User.js";
+import Subscriber from "../../server/models/Subscriber.js";
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -18,27 +18,20 @@ export default async function handler(req, res) {
   try {
     await connectToDatabase();
 
-    if (req.method === "PUT") {
+    if (req.method === "GET") {
       const auth = await checkAdmin(req);
       if (!auth.authorized) {
         return res.status(401).json({ message: auth.message });
       }
 
-      const { email } = req.body;
-      const userToPromote = await User.findOne({ email });
-
-      if (userToPromote) {
-        userToPromote.isAdmin = true;
-        await userToPromote.save();
-        return res.json({ message: "User promoted to admin" });
-      } else {
-        return res.status(404).json({ message: "User not found" });
-      }
+      // Get all subscribers
+      const subscribers = await Subscriber.find({});
+      res.json(subscribers);
     } else {
       return res.status(405).json({ message: "Method not allowed" });
     }
   } catch (error) {
-    console.error("Error in promote handler:", error);
-    return res.status(500).json({ message: "Server error" });
+    console.error("Error in subscribers handler:", error);
+    res.status(500).json({ message: error.message });
   }
 }
