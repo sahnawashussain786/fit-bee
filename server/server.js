@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.js";
 import paymentRoutes from "./routes/payment.js";
 import subscribeRoutes from "./routes/subscribe.js";
 import messageRoutes from "./routes/messages.js";
+import adminRoutes from "./routes/admin.js";
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -33,6 +34,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/subscribe", subscribeRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running...");
